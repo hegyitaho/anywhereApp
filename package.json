@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "google-one-tap": "^1.0.1",
+    "realm-web": "^1.2.1",
     "vue": "^3.0.0"
   },
   "devDependencies": {
