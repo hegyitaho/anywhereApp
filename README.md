@@ -1,4 +1,4 @@
-# anywhereapp
+# anywhere-frontend
 
 ## Project setup
 ```
