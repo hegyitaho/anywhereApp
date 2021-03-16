@@ -1,13 +1,27 @@
 <template>
 <div>
-	<button @click="getAuth" :disabled="!isInit">get auth code</button>
   <button @click="signIn" v-if="!isSignIn" :disabled="!isInit">sign in</button>
   <button @click="signOut" v-if="isSignIn" :disabled="!isInit">sign out</button>
-	{{ firstName }} {{ lastName }} {{ email }} {{ id_token }} {{authCode}}
+  <button @click="helloWorld" v-if="isSignIn" :disabled="!isInit">Hello world</button>
+  <button @click="addFakeUsers" v-if="isSignIn" :disabled="!isInit">addFakeUsers</button>
+	<div>
+		firstName: {{ firstName }}
+	</div>
+	<div>
+		lastName: {{ lastName }}
+	</div>
+	<div>
+		email: {{ email }}
+	</div>
+	<div>
+		id_token: {{ id_token }}
+	</div>
+<br> authCode {{access_token}}
 </div>
 </template>
 
 <script>
+const baseURL = 'http://localhost:3000'
 export default {
   name: 'App',
 	data () {
@@ -18,12 +32,18 @@ export default {
 			lastName: '',
 			email: '',
 			id_token: '',
-			authCode: ''
+			access_token: ''
     }
   },
   methods: {
+		async helloWorld() {
+			window.fetch(baseURL, { headers: { authorization: this.id_token }, credentials: 'include'})
+		},
+		async addFakeUsers() {
+			window.fetch(baseURL + '/add-fake-users', { headers: { authorization: this.id_token }, credentials: 'include'})
+		},
     async getAuth(){
-			this.authCode = await this.$gAuth.getAuthCode() 
+			this.access_token = await this.$gAuth.getAuthCode() 
       //this.$gAuth.getAuthCode()
       //.then(authCode => {
       //  console.log(authCode)
@@ -39,8 +59,7 @@ export default {
     signIn(){
       this.$gAuth.signIn()
       .then(user => {
-        console.log('user', user)
-				this.id_token = user.getAuthResponse().id_token
+				this.loadAuth(user.getAuthResponse(true))
 				this.loadUserInfo(user.getBasicProfile())
         this.isSignIn = this.$gAuth.isAuthorized
       })
@@ -62,6 +81,11 @@ export default {
 			this.email = profile.getEmail()
 			this.firstName = profile.getGivenName()
 			this.lastName = profile.getFamilyName()
+		},
+		loadAuth(authResponse) {
+		console.log(authResponse)
+			this.id_token = authResponse.id_token
+			this.access_token = authResponse.access_token
 		}
   },
 	created() {
@@ -71,13 +95,14 @@ export default {
       if(this.isInit) {
 				clearInterval(checkGauthLoad)
 			}
-    }, 1000);
+    }, 500);
 	},
 	watch: {
 		isInit: {
 			async handler(val) {
 				if (val && this.isSignIn) {
 					this.loadUserInfo(this.$gAuth.GoogleAuth.currentUser.get().getBasicProfile())
+					this.loadAuth(this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse(true))
 				}
 			},
 			immediate: true
